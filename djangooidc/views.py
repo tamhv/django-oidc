@@ -11,7 +11,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import login as auth_login_view
 from django.contrib.auth.views import logout as auth_logout_view
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import redirect, render_to_response, resolve_url
+from django.shortcuts import redirect, resolve_url, render
 from djangooidc.oidc import OIDCClients, OIDCError
 
 from . import exceptions
@@ -22,7 +22,7 @@ CLIENTS = OIDCClients(settings)
 
 
 def template_view_error(request, ctx, **kwargs):
-    return render_to_response("djangooidc/error.html", ctx)
+    return render(request, "djangooidc/error.html", ctx)
 
 
 view_error_handler = template_view_error
@@ -89,7 +89,7 @@ def openid(request, op_name=None):
             return view_error_handler(request, {"error": e})
 
     # Otherwise just render the list+form.
-    return render_to_response(template_name,
+    return render(request, template_name,
                               {"op_list": [i for i in settings.OIDC_PROVIDERS.keys() if i], 'dynamic': dyn,
                                'form': form, 'ilform': ilform, "next": request.session["next"]})
 
