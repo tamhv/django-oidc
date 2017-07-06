@@ -82,6 +82,7 @@ class Client(oic.Client):
         try:
             authresp = self.parse_response(AuthorizationResponse, response,
                                            sformat="dict", keyjar=self.keyjar)
+            print(authresp)
         except ResponseError as e:
             return OIDCError(u"Response error: {}".format(e))
 
