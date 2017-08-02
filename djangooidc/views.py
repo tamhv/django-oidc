@@ -90,8 +90,8 @@ def openid(request, op_name=None):
 
     # Otherwise just render the list+form.
     return render(request, template_name,
-                              {"op_list": [i for i in settings.OIDC_PROVIDERS.keys() if i], 'dynamic': dyn,
-                               'form': form, 'ilform': ilform, "next": request.session["next"]})
+                  {"op_list": [i for i in settings.OIDC_PROVIDERS.keys() if i], 'dynamic': dyn,
+                   'form': form, 'ilform': ilform, "next": request.session["next"]})
 
 
 # Step 4: analyze the token returned by the OP
@@ -181,11 +181,11 @@ def logout(request, next_page=None):
         # the user should be directed to the OIDC provider to logout after being
         # logged out here.
 
-        if 'access_token' in request.session and 'state' in request.session:
+        if 'id_token_raw' in request.session and 'state' in request.session:
             # TODO: determine if OIDC was used to login by some better way
 
             request_args = {
-                'id_token_hint': request.session['access_token'],
+                'id_token_hint': request.session['id_token_raw'],
                 'state': request.session['state'],
             }
             # should include the post_logout_redirect_uri

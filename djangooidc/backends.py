@@ -24,13 +24,14 @@ class OpenIdConnectBackend(ModelBackend):
             return user
 
         UserModel = get_user_model()
-        username = self.clean_username(kwargs['sub'])
+        username = self.clean_username(kwargs['email'])
         if 'upn' in kwargs.keys():
             username = kwargs['upn']
 
         # Some OP may actually choose to withhold some information, so we must
         # test if it is present
         openid_data = {'last_login': datetime.datetime.now()}
+        openid_data['id'] = kwargs['sub']
         if 'first_name' in kwargs.keys():
             openid_data['first_name'] = kwargs['first_name']
         if 'given_name' in kwargs.keys():
