@@ -117,7 +117,10 @@ def authz_cb(request):
         user = authenticate(request=request, **userinfo)
         if user:
             login(request, user)
-            return redirect(request.session.get("next", "/"))
+            next_url = request.session.get("next", "/")
+            if next_url in [None, '']:
+                next_url = "/"
+            return redirect(next_url)
         else:
             raise exceptions.AuthenticationFailed(
                 'this login is not valid in this application')

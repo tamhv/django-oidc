@@ -9,6 +9,23 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.utils import timezone
 
+
+def generate_username(first_name, last_name, user_id):
+    UserModel = get_user_model()
+    val = "{0}.{1}".format(first_name[0], last_name).lower()
+    x = 1
+    while True:
+        if x == 1 and UserModel.objects.exclude(pk=user_id).filter(username=val).count() == 0:
+            return val
+        else:
+            new_val = "{0}{1}".format(val, x)
+            if UserModel.objects.exclude(pk=user_id).filter(username=new_val).count() == 0:
+                return new_val
+        x += 1
+        if x > 1000000:
+            raise Exception("Name is super popular!")
+
+
 class OpenIdConnectBackend(ModelBackend):
     """
     This backend checks a previously performed OIDC authentication.
@@ -49,7 +66,9 @@ class OpenIdConnectBackend(ModelBackend):
         # instead we use get_or_create when creating unknown users since it has
         # built-in safeguards for multiple threads.
         if getattr(settings, 'OIDC_CREATE_UNKNOWN_USER', True):
-            args = {UserModel.USERNAME_FIELD: username,
+            openid_data['username'] = generate_username(openid_data['first_name'], openid_data['last_name'],
+                                                        openid_data['id'])
+            args = {'pk': openid_data['id'],
                     'defaults': openid_data, }
             user, created = UserModel.objects.update_or_create(**args)
             if created:
