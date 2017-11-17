@@ -112,12 +112,19 @@ def authz_cb(request):
         callback_result = client.callback(query, request.session)
         if isinstance(callback_result, OIDCError):
             raise callback_result
+        elif isinstance(callback_result, HttpResponseRedirect):
+            return callback_result
         userinfo = callback_result
-        request.session["userinfo"] = userinfo
         user = authenticate(request=request, **userinfo)
         if user:
+            tmp = request.session.pop('resp', [])
+            next_url = request.session.get('next', '/')
             login(request, user)
-            next_url = request.session.get("next", "/")
+
+            for i in tmp:
+                request.session[i] = tmp[i]
+            request.session['session_state'] = request.GET.get('session_state', '')
+
             if next_url in [None, '']:
                 next_url = "/"
             return redirect(next_url)

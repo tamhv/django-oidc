@@ -24,7 +24,6 @@ class OIDCError(exceptions.OIDCException):
 
 
 class Client(oic.Client):
-
     def __init__(self, client_id=None, ca_certs=None,
                  client_prefs=None, client_authn_method=None, keyjar=None,
                  verify_ssl=True, behaviour=None):
@@ -60,7 +59,7 @@ class Client(oic.Client):
 
         url, body, ht_args, cis = self.uri_and_body(AuthorizationRequest, cis,
                                                     method="GET",
-                                                    request_args=request_args,)
+                                                    request_args=request_args, )
         logger.debug("body: %s" % body)
         logger.info("URL: %s" % url)
         logger.debug("ht_args: %s" % ht_args)
@@ -82,7 +81,7 @@ class Client(oic.Client):
         try:
             authresp = self.parse_response(AuthorizationResponse, response,
                                            sformat="dict", keyjar=self.keyjar)
-            print(authresp)
+
         except ResponseError as e:
             return OIDCError(u"Response error: {}".format(e))
 
@@ -121,14 +120,25 @@ class Client(oic.Client):
 
             if isinstance(atresp, ErrorResponse):
                 raise OIDCError("Invalid response %s." % atresp["error"])
+            tmp = dict()
+            tmp['op'] = session['op']
             session['id_token'] = atresp['id_token']._dict
             if session['id_token']:
                 session['id_token_raw'] = getattr(self, 'id_token_raw', None)
+            else:
+                session['id_token_raw'] = ''
             session['access_token'] = atresp['access_token']
             try:
                 session['refresh_token'] = atresp['refresh_token']
             except:
-                pass
+                session['refresh_token'] = ''
+            tmp = dict()
+            tmp['op'] = session['op']
+            tmp['id_token'] = session['id_token']
+            tmp['id_token_raw'] = session['id_token_raw']
+            tmp['access_token'] = session['access_token']
+            tmp['refresh_token'] = session['refresh_token']
+            session['resp'] = tmp
 
         try:
             inforesp = self.do_user_info_request(
@@ -141,9 +151,10 @@ class Client(oic.Client):
 
             logger.debug("UserInfo: %s" % inforesp)
         except MissingEndpoint as e:
-            logging.warning("Wrong OIDC provider implementation or configuration: {}; using token as userinfo source".format(
-                e
-            ))
+            logging.warning(
+                "Wrong OIDC provider implementation or configuration: {}; using token as userinfo source".format(
+                    e
+                ))
             userinfo = session.get('id_token', {})
 
         return userinfo
@@ -171,7 +182,6 @@ class Client(oic.Client):
 
 
 class OIDCClients(object):
-
     def __init__(self, config):
         """
 
@@ -297,7 +307,7 @@ class OIDCClients(object):
             _pcr = client.provider_config(issuer)
             # register the client
             client.register(_pcr["registration_endpoint"], **
-                            self.config.OIDC_DYNAMIC_CLIENT_REGISTRATION_DATA)
+            self.config.OIDC_DYNAMIC_CLIENT_REGISTRATION_DATA)
             try:
                 client.behaviour.update(**self.config.OIDC_DEFAULT_BEHAVIOUR)
             except KeyError:
