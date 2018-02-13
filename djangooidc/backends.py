@@ -11,8 +11,14 @@ from django.utils import timezone
 
 
 def generate_username(first_name, last_name, user_id):
+
+    if not first_name:
+        first_char=''
+    else:
+        first_char=first_name[0]
+
     UserModel = get_user_model()
-    val = "{0}.{1}".format(first_name[0], last_name).lower()
+    val = "{0}.{1}".format(first_char, last_name).lower()
     x = 1
     while True:
         if x == 1 and UserModel.objects.exclude(pk=user_id).filter(username=val).count() == 0:
@@ -38,6 +44,9 @@ class OpenIdConnectBackend(ModelBackend):
     def authenticate(self, **kwargs):
         user = None
         if not kwargs or 'sub' not in kwargs.keys():
+            return user
+
+        if 'email' not in kwargs.keys():
             return user
 
         UserModel = get_user_model()
