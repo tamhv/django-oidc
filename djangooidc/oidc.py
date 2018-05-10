@@ -228,6 +228,12 @@ class OIDCClients(object):
 
         # The behaviour parameter is not significant for the election process
         _key_set.discard("behaviour")
+
+        default_provider_info = False
+        if 'default_provider_info' in _key_set:
+            default_provider_info = True
+            _key_set.discard("default_provider_info")
+
         for param in ["allow"]:
             try:
                 setattr(client, param, kwargs[param])
@@ -282,7 +288,15 @@ class OIDCClients(object):
                     "Provider info discovery failed for %s - assume backend unworkable",
                     kwargs["srv_discovery_url"]
                 )
-                logger.exception(e)
+                # logger.exception(e)
+
+                # for some reasons, at the moment django app start, it cant discovery provider info, this is an option to fallback to a predefined provider info
+                if default_provider_info:
+                    client.handle_provider_config(
+                        ProviderConfigurationResponse(**kwargs["default_provider_info"]),
+                        kwargs["default_provider_info"]["issuer"])
+                    client.store_registration_info(RegistrationResponse(
+                        **kwargs["client_registration"]))
         else:
             raise Exception("Configuration error ?")
 
