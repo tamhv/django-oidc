@@ -122,7 +122,7 @@ class Client(oic.Client):
                 raise OIDCError("Invalid response %s." % atresp["error"])
             tmp = dict()
             tmp['op'] = session['op']
-            session['id_token'] = atresp['id_token']._dict
+            session['id_token'] = atresp['id_token'].to_dict()
             if session['id_token']:
                 session['id_token_raw'] = getattr(self, 'id_token_raw', None)
             else:
